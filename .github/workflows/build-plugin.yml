@@ -1,11 +1,6 @@
 name: Build Plugin Windows/Linux
 
-on:
-  push:
-    tags:
-      - v1.**
-  pull_request:
-    branches: [ "master" ]
+on: workflow_dispatch
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
