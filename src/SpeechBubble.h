@@ -12,8 +12,7 @@
 #include <QDialog>
 #include <QColor>
 
-class QLayout;
-class QLabel;
+class QToolButton;
 
 class SpeechBubble : public QDialog
 {
@@ -30,23 +29,19 @@ class SpeechBubble : public QDialog
 
   protected:
 	void paintEvent(QPaintEvent* evt) override;
+	void resizeEvent(QResizeEvent* evt) override;
 	bool eventFilter(QObject* object, QEvent* evt) override;
-	void mouseReleaseEvent(QMouseEvent* evt) override;
-	void mouseMoveEvent(QMouseEvent* evt) override;
 
   signals:
 	void closePressed();
 
   private:
 	void recalcPos();
-	QRect getCloseButtonRect();
+	void updateCloseButtonPos();
 
 	QString m_text;
 	QWidget* m_attach;
-	int m_tipHeight;
-	int m_tipWidth;
-	int m_tipDistLeft;
-	bool m_mouseOverCloseButton;
+	QToolButton* m_closeButton;
 	bool m_closable;
 	bool m_bubbleStyle;
 	QColor m_backgroundColor;

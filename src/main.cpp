@@ -137,11 +137,32 @@ void sb_enableInterface(bool enabled)
 			if (configDialog->isVisible())
 				notConnectedBubble->show();
 		}
+
+		// SpeechBubble::eventFilter queues a deferred show() via QTimer::singleShot(0)
+		// when its parent gets a Show event. On first dialog open we'd run before that
+		// timer fires, so hide() would be a no-op and the bubbles would appear anyway.
+		// Queue our hide on the same event loop so it wins.
+		QTimer::singleShot(0, configDialog, []() {
+			for (SpeechBubble* bubble : configDialog->findChildren<SpeechBubble*>())
+			{
+				if (bubble != notConnectedBubble)
+					bubble->hide();
+			}
+		});
 	}
-	else if (notConnectedBubble)
+	else
 	{
-		delete notConnectedBubble;
-		notConnectedBubble = nullptr;
+		if (notConnectedBubble)
+		{
+			delete notConnectedBubble;
+			notConnectedBubble = nullptr;
+		}
+
+		if (configDialog->isVisible())
+		{
+			for (SpeechBubble* bubble : configDialog->findChildren<SpeechBubble*>())
+				bubble->show();
+		}
 	}
 
 	configDialog->setEnabled(enabled);
@@ -243,7 +264,7 @@ void sb_openDialog()
 	configDialog->raise();
 	configDialog->activateWindow();
 
-	sb_enableInterface(connectionStatusMap[activeServerId]);
+	sb_enableInterface(connectionStatusMap[activeServerId] == STATUS_CONNECTION_ESTABLISHED);
 }
 
 

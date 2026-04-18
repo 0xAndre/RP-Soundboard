@@ -8,90 +8,133 @@
 
 
 #include "SpeechBubble.h"
-#include <QPainter>
-#include <QVBoxLayout>
-#include <QLabel>
+
 #include <QEvent>
-#include <QMouseEvent>
+#include <QGraphicsDropShadowEffect>
+#include <QPainter>
+#include <QPainterPath>
+#include <QTextOption>
 #include <QTimer>
+#include <QToolButton>
+
+namespace
+{
+constexpr int kShadowMargin = 12;
+constexpr int kCornerRadius = 10;
+constexpr int kTipHeight = 10;
+constexpr int kTipHalfWidth = 9;
+constexpr int kTipOffsetFromLeft = 24; // distance from body's left edge to tip center
+constexpr int kTextPadding = 12;
+constexpr int kAttachGap = 4;
+constexpr int kCloseButtonSize = 22;
+constexpr int kCloseButtonMargin = 4;
+} // namespace
+
 
 SpeechBubble::SpeechBubble(QWidget* parent /*= 0*/) :
 	BaseClass(parent, Qt::FramelessWindowHint),
 	m_attach(nullptr),
-	m_tipHeight(25),
-	m_tipWidth(15),
-	m_tipDistLeft(10),
-	m_mouseOverCloseButton(false),
+	m_closeButton(nullptr),
 	m_closable(true),
 	m_bubbleStyle(true),
 	m_backgroundColor(QColor(255, 183, 59))
 {
 	setAttribute(Qt::WA_TranslucentBackground);
+	setAttribute(Qt::WA_ShowWithoutActivating);
 	if (parent)
 		parent->installEventFilter(this);
-	setMouseTracking(true);
+
+	auto* shadow = new QGraphicsDropShadowEffect(this);
+	shadow->setBlurRadius(20);
+	shadow->setOffset(0, 2);
+	shadow->setColor(QColor(0, 0, 0, 120));
+	setGraphicsEffect(shadow);
+
+	m_closeButton = new QToolButton(this);
+	m_closeButton->setFocusPolicy(Qt::NoFocus);
+	m_closeButton->setCursor(Qt::PointingHandCursor);
+	m_closeButton->setFixedSize(kCloseButtonSize, kCloseButtonSize);
+	m_closeButton->setText(QStringLiteral("\u2715"));
+	m_closeButton->setStyleSheet(
+		"QToolButton { border: none; border-radius: 11px; background: transparent;"
+		" color: #2b2b2b; font-weight: bold; font-size: 12px; }"
+		"QToolButton:hover { background: rgba(0, 0, 0, 40); }"
+		"QToolButton:pressed { background: rgba(0, 0, 0, 70); }"
+	);
+	connect(m_closeButton, &QToolButton::clicked, this, [this]() {
+		emit closePressed();
+		hide();
+		deleteLater();
+	});
 }
 
 
 void SpeechBubble::setText(const QString& text)
 {
 	m_text = text;
+	update();
 }
 
 
-void SpeechBubble::paintEvent(QPaintEvent* evt)
+void SpeechBubble::paintEvent(QPaintEvent* /*evt*/)
 {
 	QPainter painter(this);
-	// painter.setRenderHint(QPainter::Antialiasing, false);
+	painter.setRenderHint(QPainter::Antialiasing, true);
 
-	painter.setPen(QColor(0, 0, 0));
-	painter.setBrush(m_backgroundColor);
+	const qreal bodyLeft = kShadowMargin;
+	const qreal bodyTop = kShadowMargin + (m_bubbleStyle ? kTipHeight : 0);
+	const qreal bodyRight = width() - kShadowMargin;
+	const qreal bodyBottom = height() - kShadowMargin;
+	const qreal r = kCornerRadius;
 
-	// Draw outer appearance
+	QPainterPath path;
 	if (m_bubbleStyle)
 	{
-		QPoint polygonPoints[] = {
-			QPoint(0, m_tipHeight), // top left
-			QPoint(m_tipDistLeft, m_tipHeight),
-			QPoint(m_tipDistLeft, 0),
-			QPoint(m_tipDistLeft + m_tipWidth, m_tipHeight),
-			QPoint(width() - 1, m_tipHeight), // top right
-			QPoint(width() - 1, height() - 1), // bottom right
-			QPoint(0, height() - 1) // bottom left
-		};
-		painter.drawPolygon(polygonPoints, 7);
+		const qreal tipCenterX = bodyLeft + kTipOffsetFromLeft;
+		const qreal tipLeftX = tipCenterX - kTipHalfWidth;
+		const qreal tipRightX = tipCenterX + kTipHalfWidth;
+		const qreal tipTopY = bodyTop - kTipHeight;
+
+		path.moveTo(bodyLeft + r, bodyTop);
+		path.lineTo(tipLeftX, bodyTop);
+		path.lineTo(tipCenterX, tipTopY);
+		path.lineTo(tipRightX, bodyTop);
+		path.lineTo(bodyRight - r, bodyTop);
+		path.quadTo(bodyRight, bodyTop, bodyRight, bodyTop + r);
+		path.lineTo(bodyRight, bodyBottom - r);
+		path.quadTo(bodyRight, bodyBottom, bodyRight - r, bodyBottom);
+		path.lineTo(bodyLeft + r, bodyBottom);
+		path.quadTo(bodyLeft, bodyBottom, bodyLeft, bodyBottom - r);
+		path.lineTo(bodyLeft, bodyTop + r);
+		path.quadTo(bodyLeft, bodyTop, bodyLeft + r, bodyTop);
+		path.closeSubpath();
 	}
 	else
 	{
-		QPoint polygonPoints[] = {
-			QPoint(0, 0), // top left
-			QPoint(width() - 1, 0), // top right
-			QPoint(width() - 1, height() - 1), // bottom right
-			QPoint(0, height() - 1) // bottom left
-		};
-		painter.drawPolygon(polygonPoints, 4);
+		path.addRoundedRect(QRectF(bodyLeft, bodyTop, bodyRight - bodyLeft, bodyBottom - bodyTop), r, r);
 	}
 
-	// Draw text
-	QTextOption option;
-	option.setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-	int maxTextPos = m_bubbleStyle ? m_tipHeight : 0;
-	painter.drawText(QRect(0, maxTextPos, width() - 1, height() - maxTextPos - 1), m_text, option);
+	painter.setPen(QPen(m_backgroundColor.darker(135), 1));
+	painter.setBrush(m_backgroundColor);
+	painter.drawPath(path);
 
-	// Draw closing X
-	if (m_closable)
-	{
-		QRect xRect = getCloseButtonRect();
-		if (m_mouseOverCloseButton)
-		{
-			painter.drawRect(xRect + QMargins(2, 2, 1, 1));
-			painter.setPen(QColor(100, 100, 100));
-		}
-		painter.drawLine(xRect.topLeft(), xRect.bottomRight());
-		painter.drawLine(xRect.bottomLeft(), xRect.topRight());
-	}
+	QTextOption opt;
+	opt.setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+	opt.setWrapMode(QTextOption::WordWrap);
+	const qreal textRightInset = m_closable ? (kCloseButtonSize + kCloseButtonMargin) : kTextPadding;
+	QRectF textRect(
+		bodyLeft + kTextPadding, bodyTop + kTextPadding / 2, bodyRight - bodyLeft - kTextPadding - textRightInset,
+		bodyBottom - bodyTop - kTextPadding
+	);
+	painter.setPen(QColor(40, 40, 40));
+	painter.drawText(textRect, m_text, opt);
+}
 
-	BaseClass::paintEvent(evt);
+
+void SpeechBubble::resizeEvent(QResizeEvent* evt)
+{
+	BaseClass::resizeEvent(evt);
+	updateCloseButtonPos();
 }
 
 
@@ -100,6 +143,7 @@ void SpeechBubble::attachTo(QWidget* widget)
 	m_attach = widget;
 	m_attach->installEventFilter(this);
 	recalcPos();
+	updateCloseButtonPos();
 }
 
 
@@ -113,6 +157,8 @@ void SpeechBubble::setBackgroundColor(const QColor& color)
 void SpeechBubble::setClosable(bool closable)
 {
 	m_closable = closable;
+	if (m_closeButton)
+		m_closeButton->setVisible(closable);
 	update();
 }
 
@@ -120,6 +166,7 @@ void SpeechBubble::setClosable(bool closable)
 void SpeechBubble::setBubbleStyle(bool bubbleStyle)
 {
 	m_bubbleStyle = bubbleStyle;
+	updateCloseButtonPos();
 	update();
 }
 
@@ -141,14 +188,10 @@ bool SpeechBubble::eventFilter(QObject* object, QEvent* evt)
 			hide();
 			break;
 		case QEvent::Show:
-			QTimer::singleShot(
-				0, this,
-				[this]()
-				{
-					this->recalcPos();
-					this->show();
-				}
-			);
+			QTimer::singleShot(0, this, [this]() {
+				this->recalcPos();
+				this->show();
+			});
 			break;
 		default:
 			break;
@@ -159,58 +202,34 @@ bool SpeechBubble::eventFilter(QObject* object, QEvent* evt)
 }
 
 
-void SpeechBubble::mouseReleaseEvent(QMouseEvent* evt)
-{
-	if (!m_closable)
-		return;
-
-	// Mouse inside closing x rect?
-	if (getCloseButtonRect().contains(this->mapFromGlobal(QCursor::pos())))
-	{
-		emit closePressed();
-		delete this;
-	}
-}
-
-
-void SpeechBubble::mouseMoveEvent(QMouseEvent* evt)
-{
-	if (!m_closable)
-		return;
-
-	if ((getCloseButtonRect() + QMargins(1, 1, 1, 1)).contains(evt->pos()))
-	{
-		if (!m_mouseOverCloseButton)
-		{
-			m_mouseOverCloseButton = true;
-			repaint();
-		}
-	}
-	else
-	{
-		if (m_mouseOverCloseButton)
-		{
-			m_mouseOverCloseButton = false;
-			repaint();
-		}
-	}
-}
-
-
 void SpeechBubble::recalcPos()
 {
+	if (!m_attach)
+		return;
+
 	QPoint pos;
 	if (m_bubbleStyle)
-		pos = QPoint(m_attach->width() / 2 - 10, m_attach->height() / 2);
+	{
+		const int tipLocalCenterX = kShadowMargin + kTipOffsetFromLeft;
+		const int tipLocalTopY = kShadowMargin;
+		const QPoint attachBottomCenter = m_attach->mapToGlobal(QPoint(m_attach->width() / 2, m_attach->height()));
+		pos = QPoint(attachBottomCenter.x() - tipLocalCenterX, attachBottomCenter.y() + kAttachGap - tipLocalTopY);
+	}
 	else
-		pos = QPoint(m_attach->width() / 2 - width() / 2, m_attach->height() / 2 - height() / 2);
-	this->move(m_attach->mapToGlobal(pos));
+	{
+		const QPoint attachCenter = m_attach->mapToGlobal(QPoint(m_attach->width() / 2, m_attach->height() / 2));
+		pos = QPoint(attachCenter.x() - width() / 2, attachCenter.y() - height() / 2);
+	}
+
+	this->move(pos);
 }
 
 
-QRect SpeechBubble::getCloseButtonRect()
+void SpeechBubble::updateCloseButtonPos()
 {
-	int xsize = 8;
-	int xborder = 4;
-	return QRect(width() - xsize - xborder, m_tipHeight + xborder, xsize, xsize);
+	if (!m_closeButton)
+		return;
+	const int bodyTop = kShadowMargin + (m_bubbleStyle ? kTipHeight : 0);
+	const int bodyRight = width() - kShadowMargin;
+	m_closeButton->move(bodyRight - kCloseButtonSize - kCloseButtonMargin, bodyTop + kCloseButtonMargin);
 }

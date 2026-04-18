@@ -570,8 +570,8 @@ void MainWindow::createBubbles()
 	{
 		m_buttonBubble = new SpeechBubble(this);
 		m_buttonBubble->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-		m_buttonBubble->setFixedSize(180, 80);
-		m_buttonBubble->setText("Right click to choose sound file\nor open advanced options.");
+		m_buttonBubble->setFixedSize(250, 80);
+		m_buttonBubble->setText("Right click to choose sound file or open advanced options.");
 		m_buttonBubble->attachTo(m_buttons[0]);
 		connect(m_buttonBubble, SIGNAL(closePressed()), this, SLOT(onButtonBubbleFinished()));
 	}
@@ -580,7 +580,7 @@ void MainWindow::createBubbles()
 	{
 		SpeechBubble* stopBubble = new SpeechBubble(this);
 		stopBubble->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-		stopBubble->setFixedSize(180, 60);
+		stopBubble->setFixedSize(220, 80);
 		stopBubble->setText("Stop the currently playing sound.");
 		stopBubble->attachTo(ui->b_stop);
 		connect(stopBubble, SIGNAL(closePressed()), this, SLOT(onStopBubbleFinished()));
@@ -591,8 +591,8 @@ void MainWindow::createBubbles()
 		settingsSection->setExpanded(true);
 		SpeechBubble* colsBubble = new SpeechBubble(this);
 		colsBubble->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-		colsBubble->setFixedSize(180, 80);
-		colsBubble->setText("Change the number of buttons\non the soundboard.");
+		colsBubble->setFixedSize(250, 80);
+		colsBubble->setText("Change the number of buttons on the soundboard.");
 		colsBubble->attachTo(ui->sb_cols);
 		connect(colsBubble, SIGNAL(closePressed()), this, SLOT(onColsBubbleFinished()));
 	}
