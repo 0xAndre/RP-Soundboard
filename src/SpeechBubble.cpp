@@ -28,6 +28,43 @@ constexpr int kTextPadding = 12;
 constexpr int kAttachGap = 4;
 constexpr int kCloseButtonSize = 22;
 constexpr int kCloseButtonMargin = 4;
+
+class CloseButton : public QToolButton
+{
+public:
+	explicit CloseButton(QWidget* parent) : QToolButton(parent)
+	{
+		setAttribute(Qt::WA_Hover);
+	}
+
+protected:
+	void paintEvent(QPaintEvent* /*evt*/) override
+	{
+		QPainter p(this);
+		p.setRenderHint(QPainter::Antialiasing, true);
+
+		QColor bg(0, 0, 0, 0);
+		if (isDown())
+			bg = QColor(0, 0, 0, 70);
+		else if (underMouse())
+			bg = QColor(0, 0, 0, 40);
+		if (bg.alpha() > 0)
+		{
+			p.setPen(Qt::NoPen);
+			p.setBrush(bg);
+			p.drawEllipse(rect());
+		}
+
+		const qreal margin = 7.0;
+		QPen pen(QColor(43, 43, 43));
+		pen.setWidthF(1.6);
+		pen.setCapStyle(Qt::RoundCap);
+		p.setPen(pen);
+		const QRectF r(margin, margin, width() - 2 * margin, height() - 2 * margin);
+		p.drawLine(r.topLeft(), r.bottomRight());
+		p.drawLine(r.topRight(), r.bottomLeft());
+	}
+};
 } // namespace
 
 
@@ -50,17 +87,10 @@ SpeechBubble::SpeechBubble(QWidget* parent /*= 0*/) :
 	shadow->setColor(QColor(0, 0, 0, 120));
 	setGraphicsEffect(shadow);
 
-	m_closeButton = new QToolButton(this);
+	m_closeButton = new CloseButton(this);
 	m_closeButton->setFocusPolicy(Qt::NoFocus);
 	m_closeButton->setCursor(Qt::PointingHandCursor);
 	m_closeButton->setFixedSize(kCloseButtonSize, kCloseButtonSize);
-	m_closeButton->setText(QStringLiteral("\u2715"));
-	m_closeButton->setStyleSheet(
-		"QToolButton { border: none; border-radius: 11px; background: transparent;"
-		" color: #2b2b2b; font-weight: bold; font-size: 12px; }"
-		"QToolButton:hover { background: rgba(0, 0, 0, 40); }"
-		"QToolButton:pressed { background: rgba(0, 0, 0, 70); }"
-	);
 	connect(m_closeButton, &QToolButton::clicked, this, [this]() {
 		emit closePressed();
 		hide();
