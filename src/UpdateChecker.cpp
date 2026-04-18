@@ -32,7 +32,7 @@
 #include "ts3log.h"
 #include "ConfigModel.h"
 
-#ifdef _DEBUG
+#ifdef RPSB_DEBUG
 	#define CHECK_URL "https://mgraefe.de/rpsb/version/version_debug.xml"
 #else
 	#define CHECK_URL "https://mgraefe.de/rpsb/version/version.xml"

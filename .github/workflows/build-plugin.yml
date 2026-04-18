@@ -7,7 +7,11 @@ on:
   pull_request:
     branches: [ "master" ]
   workflow_dispatch:
-    inputs: {}
+    inputs:
+      rpsb_debug:
+        description: 'Enable RPSB_DEBUG features in the build'
+        type: boolean
+        default: false
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
@@ -97,6 +101,7 @@ jobs:
         -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
         -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/install
         -DRPSB_MAKE_PLUGIN_FILE=OFF
+        -DRPSB_DEBUG=${{ inputs.rpsb_debug && 'ON' || '' }}
 
     - name: Build
       # Build your program with the given configuration
@@ -193,6 +198,7 @@ jobs:
         -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
         -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/install
         -DRPSB_MAKE_PLUGIN_FILE=OFF
+        -DRPSB_DEBUG=${{ inputs.rpsb_debug && 'ON' || '' }}
 
     - name: Build
       # Build your program with the given configuration
@@ -267,6 +273,7 @@ jobs:
         -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
         -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/install
         -DRPSB_MAKE_PLUGIN_FILE=OFF
+        -DRPSB_DEBUG=${{ inputs.rpsb_debug && 'ON' || '' }}
 
     - name: Build
       # Build your program with the given configuration

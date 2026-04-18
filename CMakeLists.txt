@@ -91,6 +91,17 @@ target_compile_definitions(rp_soundboard PRIVATE
 	$<IF:$<CONFIG:Debug>,_DEBUG,NDEBUG>
 )
 
+# RPSB_DEBUG gates debug-only features (extra menu item, debug update XML, etc.).
+# Leave empty to follow the build type (ON in Debug, OFF otherwise). Set to ON
+# explicitly to enable debug features in a Release build.
+set(RPSB_DEBUG "" CACHE STRING "Enable RPSB debug features (ON/OFF). Leave empty to follow build type.")
+
+if("${RPSB_DEBUG}" STREQUAL "")
+	target_compile_definitions(rp_soundboard PRIVATE $<$<CONFIG:Debug>:RPSB_DEBUG>)
+elseif(RPSB_DEBUG)
+	target_compile_definitions(rp_soundboard PRIVATE RPSB_DEBUG)
+endif()
+
 # Special platform dependent compile options
 if (MSVC)
 	target_sources(rp_soundboard PRIVATE "src/windows/resource.h" "src/windows/Resource.rc")

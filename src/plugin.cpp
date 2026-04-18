@@ -263,7 +263,7 @@ extern "C"
 		 * <TeamSpeak 3 Client install dir>\plugins\test_plugin\1.png
 		 */
 
-#ifdef _DEBUG
+#ifdef RPSB_DEBUG
 		BEGIN_CREATE_MENUS(4); /* IMPORTANT: Number of menu items must be correct! */
 #else
 		BEGIN_CREATE_MENUS(3); /* IMPORTANT: Number of menu items must be correct! */
@@ -271,7 +271,7 @@ extern "C"
 		CREATE_MENU_ITEM(PLUGIN_MENU_TYPE_GLOBAL, MENU_ID_SHOW_CONFIG, "Open Soundboard", "rpmb_icon_16.png");
 		CREATE_MENU_ITEM(PLUGIN_MENU_TYPE_GLOBAL, MENU_ID_SHOW_ABOUT, "About", "rpmb_icon_16.png");
 		CREATE_MENU_ITEM(PLUGIN_MENU_TYPE_GLOBAL, MENU_ID_CHECK_FOR_UPDATES, "Check for update", "rpmb_icon_16.png");
-#ifdef _DEBUG
+#ifdef RPSB_DEBUG
 		CREATE_MENU_ITEM(
 			PLUGIN_MENU_TYPE_GLOBAL, MENU_ID_RESET_FIRST_TIME_USAGE, "Reset first time usage (debug)", "rpmb_icon_16.png"
 		);
