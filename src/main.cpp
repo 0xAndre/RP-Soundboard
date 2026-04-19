@@ -125,7 +125,7 @@ void sb_enableInterface(bool enabled)
 		{
 			notConnectedBubble = new SpeechBubble(configDialog);
 			notConnectedBubble->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-			notConnectedBubble->setFixedSize(350, 80);
+			notConnectedBubble->setFixedSize(350, 110);
 			notConnectedBubble->setBackgroundColor(QColor(255, 255, 255));
 			notConnectedBubble->setBubbleStyle(false);
 			notConnectedBubble->setClosable(false);
