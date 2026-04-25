@@ -274,6 +274,17 @@ void MainWindow::setConfiguration(int cfg)
 	ui->labelStatus->setText(QString("Configuration %1").arg(cfg + 1));
 }
 
+void MainWindow::setServerConnected(bool connected)
+{
+	m_notConnectedBubble->setTempHidden(connected);
+	for (SpeechBubble* bubble : {m_buttonBubble, m_stopBubble, m_colsBubble})
+		if (bubble)
+			bubble->setTempHidden(!connected);
+
+	setEnabled(connected);
+}
+
+
 void MainWindow::onSetConfig()
 {
 	QRadioButton* button = qobject_cast<QRadioButton*>(sender());
@@ -566,6 +577,18 @@ void MainWindow::deleteButton(size_t buttonId)
 
 void MainWindow::createBubbles()
 {
+	m_notConnectedBubble = new SpeechBubble(this);
+	m_notConnectedBubble->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+	m_notConnectedBubble->setFixedSize(350, 110);
+	m_notConnectedBubble->setBackgroundColor(QColor(255, 255, 255));
+	m_notConnectedBubble->setBubbleStyle(false);
+	m_notConnectedBubble->setClosable(false);
+	m_notConnectedBubble->setText(
+		"You are not connected to a server.\n"
+		"RP Soundboard is disabled until you are connected properly."
+	);
+	m_notConnectedBubble->attachTo(this);
+
 	if (m_model->getBubbleButtonsBuild() == 0)
 	{
 		m_buttonBubble = new SpeechBubble(this);
@@ -573,47 +596,41 @@ void MainWindow::createBubbles()
 		m_buttonBubble->setFixedSize(250, 80);
 		m_buttonBubble->setText("Right click to choose sound file or open advanced options.");
 		m_buttonBubble->attachTo(m_buttons[0]);
-		connect(m_buttonBubble, SIGNAL(closePressed()), this, SLOT(onButtonBubbleFinished()));
+		m_buttonBubble->setTempHidden(true);
+		connect(m_buttonBubble, &SpeechBubble::closePressed, [this]() {
+			m_model->setBubbleButtonsBuild(buildinfo_getBuildNumber());
+			m_buttonBubble = nullptr;
+		});
 	}
 
 	if (m_model->getBubbleStopBuild() == 0)
 	{
-		SpeechBubble* stopBubble = new SpeechBubble(this);
-		stopBubble->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-		stopBubble->setFixedSize(220, 80);
-		stopBubble->setText("Stop the currently playing sound.");
-		stopBubble->attachTo(ui->b_stop);
-		connect(stopBubble, SIGNAL(closePressed()), this, SLOT(onStopBubbleFinished()));
+		m_stopBubble = new SpeechBubble(this);
+		m_stopBubble->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+		m_stopBubble->setFixedSize(220, 80);
+		m_stopBubble->setText("Stop the currently playing sound.");
+		m_stopBubble->attachTo(ui->b_stop);
+		m_stopBubble->setTempHidden(true);
+		connect(m_stopBubble, &SpeechBubble::closePressed, [this]() {
+			m_model->setBubbleStopBuild(buildinfo_getBuildNumber());
+			m_stopBubble = nullptr;
+		});
 	}
 
 	if (m_model->getBubbleColsBuild() == 0)
 	{
 		settingsSection->setExpanded(true);
-		SpeechBubble* colsBubble = new SpeechBubble(this);
-		colsBubble->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-		colsBubble->setFixedSize(250, 80);
-		colsBubble->setText("Change the number of buttons on the soundboard.");
-		colsBubble->attachTo(ui->sb_cols);
-		connect(colsBubble, SIGNAL(closePressed()), this, SLOT(onColsBubbleFinished()));
+		m_colsBubble = new SpeechBubble(this);
+		m_colsBubble->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+		m_colsBubble->setFixedSize(250, 80);
+		m_colsBubble->setText("Change the number of buttons on the soundboard.");
+		m_colsBubble->attachTo(ui->sb_cols);
+		m_colsBubble->setTempHidden(true);
+		connect(m_colsBubble, &SpeechBubble::closePressed, [this]() {
+			m_model->setBubbleColsBuild(buildinfo_getBuildNumber());
+			m_colsBubble = nullptr;
+		});
 	}
-}
-
-
-void MainWindow::onStopBubbleFinished()
-{
-	m_model->setBubbleStopBuild(buildinfo_getBuildNumber());
-}
-
-
-void MainWindow::onButtonBubbleFinished()
-{
-	m_model->setBubbleButtonsBuild(buildinfo_getBuildNumber());
-}
-
-
-void MainWindow::onColsBubbleFinished()
-{
-	m_model->setBubbleColsBuild(buildinfo_getBuildNumber());
 }
 
 

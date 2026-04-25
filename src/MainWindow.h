@@ -54,6 +54,8 @@ class MainWindow : public QWidget
 	void setConfiguration(int cfg);
 	bool hotkeysEnabled();
 
+	void setServerConnected(bool connected);
+
   protected:
 	virtual void closeEvent(QCloseEvent* evt) override;
 	virtual void showEvent(QShowEvent* evt) override;
@@ -68,9 +70,6 @@ class MainWindow : public QWidget
 	void onUpdateRows(int val);
 	void onUpdateMuteMyself(bool val);
 	void showButtonContextMenu(const QPoint& point);
-	void onStopBubbleFinished();
-	void onButtonBubbleFinished();
-	void onColsBubbleFinished();
 	void showStopButtonContextMenu(const QPoint& point);
 	void showPauseButtonContextMenu(const QPoint& point);
 	void onStartPlayingSound(bool preview, QString filename);
@@ -135,6 +134,9 @@ class MainWindow : public QWidget
 	ModelObserver m_modelObserver;
 	QMenu m_buttonContextMenu;
 	QPointer<SpeechBubble> m_buttonBubble;
+	QPointer<SpeechBubble> m_notConnectedBubble;
+	QPointer<SpeechBubble> m_colsBubble;
+	QPointer<SpeechBubble> m_stopBubble;
 	QAction* actSetHotkey;
 	ExpandableSection* settingsSection;
 	ExpandableSection* configsSection;

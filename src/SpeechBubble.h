@@ -26,6 +26,7 @@ class SpeechBubble : public QDialog
 	void setBackgroundColor(const QColor& color);
 	void setClosable(bool closable);
 	void setBubbleStyle(bool bubbleStyle);
+	void setTempHidden(bool hidden);
 
   protected:
 	void paintEvent(QPaintEvent* evt) override;
@@ -44,5 +45,6 @@ class SpeechBubble : public QDialog
 	QToolButton* m_closeButton;
 	bool m_closable;
 	bool m_bubbleStyle;
+	bool m_tempHidden = false;
 	QColor m_backgroundColor;
 };

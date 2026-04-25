@@ -33,7 +33,6 @@
 #include "UpdateChecker.h"
 #include "SoundInfo.h"
 #include "TalkStateManager.h"
-#include "SpeechBubble.h"
 
 class ModelObserver_Prog : public ConfigModel::Observer
 {
@@ -45,7 +44,6 @@ class ModelObserver_Prog : public ConfigModel::Observer
 static uint64 activeServerId = 1;
 
 ConfigModel* configModel = nullptr;
-SpeechBubble* notConnectedBubble = nullptr;
 MainWindow* configDialog = nullptr;
 AboutQt* aboutDialog = nullptr;
 Sampler* sampler = nullptr;
@@ -116,57 +114,6 @@ Sampler* sb_getSampler()
 	return sampler;
 }
 
-
-void sb_enableInterface(bool enabled)
-{
-	if (!enabled)
-	{
-		if (!notConnectedBubble)
-		{
-			notConnectedBubble = new SpeechBubble(configDialog);
-			notConnectedBubble->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-			notConnectedBubble->setFixedSize(350, 110);
-			notConnectedBubble->setBackgroundColor(QColor(255, 255, 255));
-			notConnectedBubble->setBubbleStyle(false);
-			notConnectedBubble->setClosable(false);
-			notConnectedBubble->setText(
-				"You are not connected to a server.\n"
-				"RP Soundboard is disabled until you are connected properly."
-			);
-			notConnectedBubble->attachTo(configDialog);
-			if (configDialog->isVisible())
-				notConnectedBubble->show();
-		}
-
-		// SpeechBubble::eventFilter queues a deferred show() via QTimer::singleShot(0)
-		// when its parent gets a Show event. On first dialog open we'd run before that
-		// timer fires, so hide() would be a no-op and the bubbles would appear anyway.
-		// Queue our hide on the same event loop so it wins.
-		QTimer::singleShot(0, configDialog, []() {
-			for (SpeechBubble* bubble : configDialog->findChildren<SpeechBubble*>())
-			{
-				if (bubble != notConnectedBubble)
-					bubble->hide();
-			}
-		});
-	}
-	else
-	{
-		if (notConnectedBubble)
-		{
-			delete notConnectedBubble;
-			notConnectedBubble = nullptr;
-		}
-
-		if (configDialog->isVisible())
-		{
-			for (SpeechBubble* bubble : configDialog->findChildren<SpeechBubble*>())
-				bubble->show();
-		}
-	}
-
-	configDialog->setEnabled(enabled);
-}
 
 void sb_init()
 {
@@ -252,7 +199,7 @@ void sb_onServerChange(uint64 serverID)
 	tsMgr->setActiveServerId(serverID);
 	activeServerId = serverID;
 	logInfo("Server Id: %ull", (unsigned long long)serverID);
-	sb_enableInterface(connected);
+	configDialog->setServerConnected(connected);
 }
 
 
@@ -264,7 +211,7 @@ void sb_openDialog()
 	configDialog->raise();
 	configDialog->activateWindow();
 
-	sb_enableInterface(connectionStatusMap[activeServerId] == STATUS_CONNECTION_ESTABLISHED);
+	configDialog->setServerConnected(connectionStatusMap[activeServerId] == STATUS_CONNECTION_ESTABLISHED);
 }
 
 
@@ -342,7 +289,7 @@ void sb_onConnectStatusChange(uint64 serverConnectionHandlerID, int newStatus, u
 	{
 		if (newStatus == STATUS_DISCONNECTED)
 			sb_stopPlayback();
-		sb_enableInterface(newStatus == STATUS_CONNECTION_ESTABLISHED);
+		configDialog->setServerConnected(newStatus == STATUS_CONNECTION_ESTABLISHED);
 	}
 }
 

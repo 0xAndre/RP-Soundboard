@@ -69,7 +69,7 @@ protected:
 
 
 SpeechBubble::SpeechBubble(QWidget* parent /*= 0*/) :
-	BaseClass(parent, Qt::FramelessWindowHint),
+	BaseClass(parent, Qt::FramelessWindowHint | Qt::Tool),
 	m_attach(nullptr),
 	m_closeButton(nullptr),
 	m_closable(true),
@@ -96,6 +96,19 @@ SpeechBubble::SpeechBubble(QWidget* parent /*= 0*/) :
 		hide();
 		deleteLater();
 	});
+}
+
+
+void SpeechBubble::setTempHidden(bool hidden)
+{
+	m_tempHidden = hidden;
+	if (hidden)
+		hide();
+	else if (m_attach && m_attach->isVisible()) 
+	{
+		recalcPos();
+		show();
+	}
 }
 
 
@@ -218,10 +231,13 @@ bool SpeechBubble::eventFilter(QObject* object, QEvent* evt)
 			hide();
 			break;
 		case QEvent::Show:
-			QTimer::singleShot(0, this, [this]() {
-				this->recalcPos();
-				this->show();
-			});
+			if (!m_tempHidden)
+			{
+				QTimer::singleShot(0, this, [this]() {
+					this->recalcPos();
+					this->show();
+				});
+			}
 			break;
 		default:
 			break;
