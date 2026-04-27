@@ -811,6 +811,8 @@ void MainWindow::showEvent(QShowEvent* evt)
 
 	for (size_t i = 0; i < m_buttons.size(); i++)
 		updateButtonText(i);
+
+	applyWindowsTitleBarTheme(window(), themeIsDark(m_model->getThemeMode()));
 }
 
 
