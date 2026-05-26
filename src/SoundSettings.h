@@ -34,6 +34,7 @@ class SoundSettingsQt : public QDialog
 	{
 		return m_soundInfo;
 	}
+	void focusYoutubeUrl();
 
   protected:
 	void done(int r);

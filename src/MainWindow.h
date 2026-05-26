@@ -105,6 +105,7 @@ class MainWindow : public QWidget
 	void setButtonFile(size_t buttonId, const QString& fn, bool askForDisablingCrop = true);
 
 	void openAdvanced(size_t buttonId);
+	void openYoutubeSettings(size_t buttonId);
 	void deleteButton(size_t buttonId);
 	void createButtons();
 	void createConfigButtons();

@@ -57,6 +57,7 @@ class ConfigModel
 
 	static QString GetConfigPath();
 	static QString GetFullConfigPath();
+	static QString GetPluginDataPath();
 
 	QString getFileName(int itemId) const;
 	void setFileName(int itemId, const QString& fn);

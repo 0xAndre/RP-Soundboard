@@ -201,6 +201,19 @@ void ConfigModel::setSoundInfo(int itemId, const SoundInfo& info)
 }
 
 
+QString ConfigModel::GetPluginDataPath()
+{
+	char pluginPath[PATH_BUFSIZE];
+	ts3Functions.getPluginPath(pluginPath, PATH_BUFSIZE, getPluginID());
+	QString fullPath = QString::fromUtf8(pluginPath);
+	QChar last = fullPath[fullPath.count() - 1];
+	if (last != '/' && last != '\\')
+		fullPath.append('/');
+	fullPath.append("rp_soundboard/");
+	return fullPath;
+}
+
+
 QString ConfigModel::GetConfigPath()
 {
 	// Find config path for config class

@@ -40,6 +40,7 @@
 enum button_choices_e
 {
 	BC_CHOOSE = 0,
+	BC_YOUTUBE,
 	BC_ADVANCED,
 	BC_SET_HOTKEY,
 	BC_SET_COLOR,
@@ -168,6 +169,10 @@ MainWindow::MainWindow(ConfigModel* model, QWidget* parent /*= 0*/) :
 	QAction* actChooseFile = new QAction("Choose File", this);
 	actChooseFile->setData((int)BC_CHOOSE);
 	m_buttonContextMenu.addAction(actChooseFile);
+
+	QAction* actAddYoutube = new QAction("Add YouTube Link", this);
+	actAddYoutube->setData((int)BC_YOUTUBE);
+	m_buttonContextMenu.addAction(actAddYoutube);
 
 	QAction* actAdvancedOpts = new QAction("Advanced Options", this);
 	actAdvancedOpts->setData((int)BC_ADVANCED);
@@ -508,6 +513,9 @@ void MainWindow::showButtonContextMenu(const QPoint& point)
 			case BC_CHOOSE:
 				chooseFile(buttonId);
 				break;
+			case BC_YOUTUBE:
+				openYoutubeSettings(buttonId);
+				break;
 			case BC_ADVANCED:
 				openAdvanced(buttonId);
 				break;
@@ -562,6 +570,19 @@ void MainWindow::openAdvanced(size_t buttonId)
 	const SoundInfo& info = buttonInfo ? *buttonInfo : defaultInfo;
 	SoundSettingsQt dlg(info, buttonId, this);
 	dlg.setWindowTitle(QString("Sound %1 Settings").arg(QString::number(buttonId + 1)));
+	if (dlg.exec() == QDialog::Accepted)
+		m_model->setSoundInfo(buttonId, dlg.getSoundInfo());
+}
+
+
+void MainWindow::openYoutubeSettings(size_t buttonId)
+{
+	const SoundInfo* buttonInfo = m_model->getSoundInfo(buttonId);
+	SoundInfo defaultInfo;
+	const SoundInfo& info = buttonInfo ? *buttonInfo : defaultInfo;
+	SoundSettingsQt dlg(info, buttonId, this);
+	dlg.setWindowTitle(QString("Sound %1 Settings").arg(QString::number(buttonId + 1)));
+	dlg.focusYoutubeUrl();
 	if (dlg.exec() == QDialog::Accepted)
 		m_model->setSoundInfo(buttonId, dlg.getSoundInfo());
 }

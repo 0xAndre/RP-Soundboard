@@ -3,7 +3,7 @@ name: Build Plugin Windows/Linux
 on:
   push:
     tags:
-      - v1.**
+      - v*
   pull_request:
     branches: [ "master" ]
   workflow_dispatch:
@@ -93,6 +93,10 @@ jobs:
         install-deps: 'true'
         cache: 'true'
         cache-key-prefix: 'install-qt-action-win32'
+
+    - name: Download yt-dlp (x86)
+      run: |
+        Invoke-WebRequest -Uri "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_x86.exe" -OutFile "deploy/plugins/rp_soundboard/yt-dlp.exe"
 
     - name: Configure CMake
       run: >
@@ -191,6 +195,10 @@ jobs:
         cache: 'true'
         cache-key-prefix: 'install-qt-action-win64'
 
+    - name: Download yt-dlp (x64)
+      run: |
+        Invoke-WebRequest -Uri "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe" -OutFile "deploy/plugins/rp_soundboard/yt-dlp.exe"
+
     - name: Configure CMake
       run: >
         cmake -G "Visual Studio 17 2022" -A x64 -T v142
@@ -266,6 +274,11 @@ jobs:
         cache: 'true'
         cache-key-prefix: 'install-qt-action-x64-linux'
 
+    - name: Download yt-dlp (linux x64)
+      run: |
+        curl -L "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp" -o "deploy/plugins/rp_soundboard/yt-dlp"
+        chmod +x "deploy/plugins/rp_soundboard/yt-dlp"
+
     - name: Configure CMake
       run: >
         cmake
@@ -329,11 +342,3 @@ jobs:
         name: plugin-windows-linux
         path: ${{github.workspace}}/release/*.ts3_plugin
         if-no-files-found: error
-
-    - name: Release
-      uses: softprops/action-gh-release@v1
-      if: startsWith(github.ref, 'refs/tags/')
-      with:
-        files: release/*.ts3_plugin
-        fail_on_unmatched_files: true
-        generate_release_notes: true

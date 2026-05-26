@@ -209,3 +209,10 @@ void SoundSettingsQt::updateSoundView()
 	m_soundview->setSound(info);
 	m_soundview->update();
 }
+
+
+void SoundSettingsQt::focusYoutubeUrl()
+{
+	ui->youtubeUrlEdit->setFocus();
+	ui->youtubeUrlEdit->selectAll();
+}

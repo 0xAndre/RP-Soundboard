@@ -12,9 +12,11 @@
 #include "inputfile.h"
 #include "samples.h"
 #include "SoundInfo.h"
+#include "ConfigModel.h"
 #include "ts3log.h"
 #include "HighResClock.h"
 #include <QProcess>
+#include <QFile>
 
 #include <queue>
 #include <vector>
@@ -328,9 +330,17 @@ bool Sampler::playSoundInternal(const SoundInfo& sound, bool preview)
 	QString fileToPlay = sound.filename;
 	if (!sound.youtubeUrl.isEmpty())
 	{
+		// Prefer bundled yt-dlp shipped with the plugin, fall back to system PATH
+#ifdef _WIN32
+		QString bundledYtdlp = ConfigModel::GetPluginDataPath() + "yt-dlp.exe";
+#else
+		QString bundledYtdlp = ConfigModel::GetPluginDataPath() + "yt-dlp";
+#endif
+		QString ytdlpExe = QFile::exists(bundledYtdlp) ? bundledYtdlp : QString("yt-dlp");
+
 		QProcess ytdlp;
 		// -x: audio only, -g: print URL(s) without downloading, --no-playlist: single video
-		ytdlp.start("yt-dlp", QStringList() << "-x" << "-g" << "--no-playlist" << sound.youtubeUrl);
+		ytdlp.start(ytdlpExe, QStringList() << "-x" << "-g" << "--no-playlist" << sound.youtubeUrl);
 		if (!ytdlp.waitForFinished(30000) || ytdlp.exitCode() != 0)
 		{
 			QString err = QString::fromUtf8(ytdlp.readAllStandardError()).trimmed();
