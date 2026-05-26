@@ -16,6 +16,7 @@
 #include <QFileDialog>
 #include <QPainter>
 #include <QFileInfo>
+#include <QFile>
 #include "MainWindow.h"
 #include <QColorDialog>
 
@@ -53,6 +54,7 @@ SoundSettingsQt::SoundSettingsQt(const SoundInfo& soundInfo, size_t buttonId, QW
 	connect(ui->startSoundValueSpin, SIGNAL(valueChanged(int)), this, SLOT(updateSoundView()));
 	connect(ui->stopSoundValueSpin, SIGNAL(valueChanged(int)), this, SLOT(updateSoundView()));
 	connect(ui->groupCrop, SIGNAL(clicked(bool)), this, SLOT(updateSoundView()));
+	connect(ui->youtubeUrlEdit, &QLineEdit::editingFinished, this, &SoundSettingsQt::onYoutubeUrlEditingFinished);
 	initGui(m_soundInfo);
 
 	m_timer = new QTimer(this);
@@ -215,4 +217,65 @@ void SoundSettingsQt::focusYoutubeUrl()
 {
 	ui->youtubeUrlEdit->setFocus();
 	ui->youtubeUrlEdit->selectAll();
+}
+
+
+void SoundSettingsQt::onYoutubeUrlEditingFinished()
+{
+	QString url = ui->youtubeUrlEdit->text().trimmed();
+	if (url.isEmpty())
+		return;
+
+	// Kill any previous in-flight fetch
+	if (m_ytdlpTitleProcess)
+	{
+		m_ytdlpTitleProcess->kill();
+		m_ytdlpTitleProcess->deleteLater();
+		m_ytdlpTitleProcess = nullptr;
+	}
+
+#ifdef _WIN32
+	QString bundled = ConfigModel::GetPluginDataPath() + "yt-dlp.exe";
+#else
+	QString bundled = ConfigModel::GetPluginDataPath() + "yt-dlp";
+#endif
+	QString ytdlpExe = QFile::exists(bundled) ? bundled : QStringLiteral("yt-dlp");
+
+	ui->customTextEdit->setPlaceholderText("Fetching title...");
+
+	m_ytdlpTitleProcess = new QProcess(this);
+	connect(
+		m_ytdlpTitleProcess,
+		QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+		this,
+		&SoundSettingsQt::onYoutubeTitleFetched
+	);
+	m_ytdlpTitleProcess->start(ytdlpExe, QStringList() << "--print" << "title" << "--no-playlist" << url);
+}
+
+
+void SoundSettingsQt::onYoutubeTitleFetched(int exitCode, QProcess::ExitStatus status)
+{
+	QProcess* proc = qobject_cast<QProcess*>(sender());
+	if (!proc)
+		return;
+
+	if (exitCode == 0 && status == QProcess::NormalExit)
+	{
+		QString title = QString::fromUtf8(proc->readAllStandardOutput()).trimmed();
+		if (!title.isEmpty())
+		{
+			ui->customTextEdit->setText(title);
+			ui->customTextEdit->setPlaceholderText(title);
+		}
+	}
+	else
+	{
+		// Restore placeholder to filename basename on failure
+		ui->customTextEdit->setPlaceholderText(QFileInfo(ui->filenameEdit->text()).baseName());
+	}
+
+	if (proc == m_ytdlpTitleProcess)
+		m_ytdlpTitleProcess = nullptr;
+	proc->deleteLater();
 }

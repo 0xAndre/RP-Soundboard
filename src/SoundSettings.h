@@ -12,6 +12,7 @@
 #include <QCloseEvent>
 #include <QIcon>
 #include <QTimer>
+#include <QProcess>
 #include "SoundInfo.h"
 
 class ConfigModel;
@@ -49,6 +50,8 @@ class SoundSettingsQt : public QDialog
 	void onColorEnabledPressed();
 	void onChooseColorPressed();
 	void updateSoundView();
+	void onYoutubeUrlEditingFinished();
+	void onYoutubeTitleFetched(int exitCode, QProcess::ExitStatus status);
 
   private:
 	void initGui(const SoundInfo& sound);
@@ -63,4 +66,5 @@ class SoundSettingsQt : public QDialog
 	QTimer* m_timer;
 	SoundView* m_soundview;
 	QColor customColor;
+	QProcess* m_ytdlpTitleProcess = nullptr;
 };

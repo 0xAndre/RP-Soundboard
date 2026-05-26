@@ -468,12 +468,14 @@ void MainWindow::updateButtonText(int i)
 
 	QString text;
 	const SoundInfo* info = m_model->getSoundInfo(i);
-	if (info && !info->filename.isEmpty())
+	if (info && (!info->filename.isEmpty() || !info->youtubeUrl.isEmpty()))
 	{
 		if (!info->customText.isEmpty())
 			text = unescapeCustomText(info->customText);
-		else
+		else if (!info->filename.isEmpty())
 			text = QFileInfo(info->filename).baseName();
+		else
+			text = "(YouTube)";
 	}
 	else
 		text = "(no file)";
