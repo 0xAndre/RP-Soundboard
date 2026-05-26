@@ -65,6 +65,7 @@ SoundSettingsQt::SoundSettingsQt(const SoundInfo& soundInfo, size_t buttonId, QW
 void SoundSettingsQt::initGui(const SoundInfo& sound)
 {
 	ui->filenameEdit->setText(sound.filename);
+	ui->youtubeUrlEdit->setText(sound.youtubeUrl);
 	ui->customTextEdit->setPlaceholderText(QFileInfo(sound.filename).baseName());
 	ui->customTextEdit->setText(sound.customText);
 	ui->soundVolumeSlider->setValue(sound.volume);
@@ -88,6 +89,7 @@ void SoundSettingsQt::initGui(const SoundInfo& sound)
 void SoundSettingsQt::fillFromGui(SoundInfo& sound)
 {
 	sound.filename = ui->filenameEdit->text();
+	sound.youtubeUrl = ui->youtubeUrlEdit->text().trimmed();
 	sound.customText = ui->customTextEdit->text();
 	sound.volume = ui->soundVolumeSlider->value();
 	sound.cropEnabled = ui->groupCrop->isChecked();

@@ -14,6 +14,7 @@
 #include "SoundInfo.h"
 #include "ts3log.h"
 #include "HighResClock.h"
+#include <QProcess>
 
 #include <queue>
 #include <vector>
@@ -323,9 +324,34 @@ bool Sampler::playSoundInternal(const SoundInfo& sound, bool preview)
 
 	stopSoundInternal();
 
+	// Resolve YouTube URL to a direct audio stream URL via yt-dlp
+	QString fileToPlay = sound.filename;
+	if (!sound.youtubeUrl.isEmpty())
+	{
+		QProcess ytdlp;
+		// -x: audio only, -g: print URL(s) without downloading, --no-playlist: single video
+		ytdlp.start("yt-dlp", QStringList() << "-x" << "-g" << "--no-playlist" << sound.youtubeUrl);
+		if (!ytdlp.waitForFinished(30000) || ytdlp.exitCode() != 0)
+		{
+			QString err = QString::fromUtf8(ytdlp.readAllStandardError()).trimmed();
+			logError("yt-dlp failed for URL '%s': %s",
+				sound.youtubeUrl.toUtf8().constData(),
+				err.toUtf8().constData());
+			return false;
+		}
+		QString resolved = QString::fromUtf8(ytdlp.readAllStandardOutput()).trimmed();
+		// yt-dlp may return multiple lines; use the first (best quality) URL
+		fileToPlay = resolved.split('\n').first().trimmed();
+		if (fileToPlay.isEmpty())
+		{
+			logError("yt-dlp returned no URL for '%s'", sound.youtubeUrl.toUtf8().constData());
+			return false;
+		}
+	}
+
 	m_inputFile = CreateInputFileFFmpeg();
 
-	if (m_inputFile->open(sound.filename.toUtf8(), sound.getStartTime(), sound.getPlayTime()) != 0)
+	if (m_inputFile->open(fileToPlay.toUtf8(), sound.getStartTime(), sound.getPlayTime()) != 0)
 	{
 		delete m_inputFile;
 		m_inputFile = nullptr;
@@ -356,7 +382,7 @@ bool Sampler::playSoundInternal(const SoundInfo& sound, bool preview)
 
 	m_sampleProducerThread.setSource(m_inputFile);
 
-	emit onStartPlaying(preview, sound.filename);
+	emit onStartPlaying(preview, fileToPlay);
 
 	return true;
 }

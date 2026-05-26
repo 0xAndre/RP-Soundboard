@@ -10,6 +10,7 @@
 #include "SoundInfo.h"
 
 #define NAME_PATH "path"
+#define NAME_YOUTUBE_URL "youtubeUrl"
 #define NAME_CUSTOM_TEXT "customText"
 #define NAME_CUSTOM_COLOR "customColor"
 #define NAME_VOLUME "volume"
@@ -21,6 +22,7 @@
 #define NAME_CROP_STOP_UNIT "cropStopUnit"
 
 #define DEFAULT_PATH ""
+#define DEFAULT_YOUTUBE_URL ""
 #define DEFAULT_CUSTOM_TEXT ""
 #define DEFAULT_CUSTOM_COLOR "00FFFFFF"
 #define DEFAULT_VOLUME 0
@@ -47,6 +49,7 @@ QString colorToString(const QColor& col)
 
 SoundInfo::SoundInfo() :
 	filename(DEFAULT_PATH),
+	youtubeUrl(DEFAULT_YOUTUBE_URL),
 	customText(DEFAULT_CUSTOM_TEXT),
 	customColor(stringToColor(DEFAULT_CUSTOM_COLOR)),
 	volume(DEFAULT_VOLUME),
@@ -63,6 +66,7 @@ SoundInfo::SoundInfo() :
 void SoundInfo::readFromConfig(const QSettings& settings)
 {
 	filename = settings.value(NAME_PATH, DEFAULT_PATH).toString();
+	youtubeUrl = settings.value(NAME_YOUTUBE_URL, DEFAULT_YOUTUBE_URL).toString();
 	customText = settings.value(NAME_CUSTOM_TEXT, DEFAULT_CUSTOM_TEXT).toString();
 	customColor = stringToColor(settings.value(NAME_CUSTOM_COLOR, DEFAULT_CUSTOM_COLOR).toString());
 	volume = settings.value(NAME_VOLUME, DEFAULT_VOLUME).toInt();
@@ -78,6 +82,7 @@ void SoundInfo::readFromConfig(const QSettings& settings)
 void SoundInfo::saveToConfig(QSettings& settings) const
 {
 	settings.setValue(NAME_PATH, filename);
+	settings.setValue(NAME_YOUTUBE_URL, youtubeUrl);
 	settings.setValue(NAME_CUSTOM_TEXT, customText);
 	settings.setValue(NAME_CUSTOM_COLOR, colorToString(customColor));
 	settings.setValue(NAME_VOLUME, volume);

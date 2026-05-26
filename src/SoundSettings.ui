@@ -152,6 +152,43 @@
     </widget>
    </item>
    <item>
+    <widget class="QGroupBox" name="groupYoutube">
+     <property name="title">
+      <string>YouTube (requires yt-dlp on PATH)</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_yt">
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_yt">
+        <item>
+         <widget class="QLabel" name="labelYoutubeUrl">
+          <property name="text">
+           <string>YouTube URL:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="youtubeUrlEdit">
+          <property name="placeholderText">
+           <string>https://www.youtube.com/watch?v=... (overrides file above)</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QLabel" name="labelYoutubeNote">
+        <property name="text">
+         <string>When a YouTube URL is set it is played instead of the file above.</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <widget class="QGroupBox" name="groupCrop">
      <property name="title">
       <string>Crop Sound</string>

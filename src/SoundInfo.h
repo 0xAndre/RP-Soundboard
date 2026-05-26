@@ -33,6 +33,7 @@ class SoundInfo
 
   public:
 	QString filename;
+	QString youtubeUrl;
 	QString customText;
 	QColor customColor;
 	int volume;
